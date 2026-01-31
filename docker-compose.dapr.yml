@@ -1,0 +1,186 @@
+version: "3.8"
+
+services:
+  # ============================================
+  # Infrastructure Services
+  # ============================================
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - student-app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - student-app-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      - student-app-network
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - student-app-network
+
+  # ============================================
+  # Dapr Placement Service
+  # ============================================
+
+  placement:
+    image: daprio/dapr:1.12.0
+    container_name: dapr-placement
+    command: ["./placement", "-port", "50006"]
+    ports:
+      - "50006:50006"
+    networks:
+      - student-app-network
+
+  # ============================================
+  # Backend Service with Dapr Sidecar
+  # ============================================
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./data/students.db
+      - ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+    volumes:
+      - ./backend:/app
+      - backend_data:/app/data
+    networks:
+      - student-app-network
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  backend-dapr:
+    image: daprio/daprd:1.12.0
+    container_name: backend-dapr
+    command: [
+      "./daprd",
+      "-app-id", "backend",
+      "-app-port", "8000",
+      "-dapr-http-port", "3500",
+      "-dapr-grpc-port", "50001",
+      "-placement-host-address", "placement:50006",
+      "-components-path", "/components",
+      "-config", "/config/config.yaml",
+      "-log-level", "info"
+    ]
+    volumes:
+      - ./deploy/dapr/components:/components
+      - ./deploy/dapr:/config
+    network_mode: "service:backend"
+    depends_on:
+      - backend
+      - placement
+      - redis
+      - kafka
+
+  # ============================================
+  # Frontend Service with Dapr Sidecar
+  # ============================================
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - student-app-network
+    depends_on:
+      - backend
+
+  frontend-dapr:
+    image: daprio/daprd:1.12.0
+    container_name: frontend-dapr
+    command: [
+      "./daprd",
+      "-app-id", "frontend",
+      "-app-port", "3000",
+      "-dapr-http-port", "3501",
+      "-dapr-grpc-port", "50002",
+      "-placement-host-address", "placement:50006",
+      "-components-path", "/components",
+      "-config", "/config/config.yaml",
+      "-log-level", "info"
+    ]
+    volumes:
+      - ./deploy/dapr/components:/components
+      - ./deploy/dapr:/config
+    network_mode: "service:frontend"
+    depends_on:
+      - frontend
+      - placement
+
+networks:
+  student-app-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  backend_data:

@@ -1,0 +1,28 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: student-events
+  namespace: student-app
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+    - name: brokers
+      value: "kafka:9092"
+    - name: consumerGroup
+      value: "student-app-group"
+    - name: clientID
+      value: "student-app-client"
+    - name: authType
+      value: "none"
+    - name: maxMessageBytes
+      value: "1048576"
+    - name: consumeRetryInterval
+      value: "100ms"
+    - name: version
+      value: "2.0.0"
+    - name: disableTls
+      value: "true"
+scopes:
+  - backend
+  - frontend

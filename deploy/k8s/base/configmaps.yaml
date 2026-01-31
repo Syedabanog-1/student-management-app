@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: student-app
+data:
+  allowed-origins: "https://student-app.example.com,http://localhost:3000"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: student-app
+data:
+  api-url: "http://backend:8000/api"
