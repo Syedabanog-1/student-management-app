@@ -208,3 +208,10 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Active Technologies
+- Python 3.11+ (Backend), Node.js 20+ / TypeScript 5.x (Frontend) + FastAPI 0.109+, SQLModel 0.0.14+, Next.js 14+, React Query 5+, Tailwind CSS 3.4+ (001-student-crud-app)
+- SQLite (file-based, `students.db`) (001-student-crud-app)
+
+## Recent Changes
+- 001-student-crud-app: Added Python 3.11+ (Backend), Node.js 20+ / TypeScript 5.x (Frontend) + FastAPI 0.109+, SQLModel 0.0.14+, Next.js 14+, React Query 5+, Tailwind CSS 3.4+

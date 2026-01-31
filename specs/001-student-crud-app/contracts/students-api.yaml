@@ -1,0 +1,366 @@
+openapi: 3.1.0
+info:
+  title: Student Management API
+  description: RESTful API for managing student records
+  version: 1.0.0
+  contact:
+    name: Student Management App
+servers:
+  - url: http://localhost:8000/api
+    description: Local development server
+
+paths:
+  /students:
+    get:
+      operationId: listStudents
+      summary: List all students
+      description: Retrieve all students with optional search filter
+      tags:
+        - Students
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Search term to filter by name, email, or roll_number (case-insensitive)
+          schema:
+            type: string
+            example: "john"
+      responses:
+        "200":
+          description: List of students
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudentRead"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      operationId: createStudent
+      summary: Create a new student
+      description: Add a new student record to the system
+      tags:
+        - Students
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentCreate"
+      responses:
+        "201":
+          description: Student created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentRead"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict - duplicate email or roll_number
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                detail: "A student with this email already exists"
+                code: "DUPLICATE_EMAIL"
+                field: "email"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /students/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Student ID
+        schema:
+          type: integer
+          example: 1
+
+    get:
+      operationId: getStudent
+      summary: Get a student by ID
+      description: Retrieve a single student record
+      tags:
+        - Students
+      responses:
+        "200":
+          description: Student found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentRead"
+        "404":
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                detail: "Student not found"
+                code: "NOT_FOUND"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      operationId: updateStudent
+      summary: Full update of a student
+      description: Replace all fields of an existing student record
+      tags:
+        - Students
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentUpdate"
+      responses:
+        "200":
+          description: Student updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentRead"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict - duplicate email or roll_number
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      operationId: patchStudent
+      summary: Partial update of a student
+      description: Update specific fields of an existing student record
+      tags:
+        - Students
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentPatch"
+      responses:
+        "200":
+          description: Student updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentRead"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict - duplicate email or roll_number
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      operationId: deleteStudent
+      summary: Delete a student
+      description: Remove a student record from the system
+      tags:
+        - Students
+      responses:
+        "200":
+          description: Student deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Student deleted successfully"
+        "404":
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Health check endpoint
+      description: Check if the API is running
+      tags:
+        - System
+      responses:
+        "200":
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+components:
+  schemas:
+    StudentBase:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Full name of the student
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: Contact email address (must be unique)
+          example: "john.doe@example.com"
+        roll_number:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: "^[A-Za-z0-9-]+$"
+          description: Institutional identifier (must be unique)
+          example: "CS-2024-001"
+      required:
+        - name
+        - email
+        - roll_number
+
+    StudentCreate:
+      allOf:
+        - $ref: "#/components/schemas/StudentBase"
+      description: Request body for creating a new student
+
+    StudentUpdate:
+      allOf:
+        - $ref: "#/components/schemas/StudentBase"
+      description: Request body for full update (all fields required)
+
+    StudentPatch:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Full name of the student
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: Contact email address
+        roll_number:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: "^[A-Za-z0-9-]+$"
+          description: Institutional identifier
+      description: Request body for partial update (all fields optional)
+
+    StudentRead:
+      allOf:
+        - $ref: "#/components/schemas/StudentBase"
+        - type: object
+          properties:
+            id:
+              type: integer
+              description: Unique identifier
+              example: 1
+            created_at:
+              type: string
+              format: date-time
+              description: Record creation timestamp
+            updated_at:
+              type: string
+              format: date-time
+              description: Last modification timestamp
+          required:
+            - id
+            - created_at
+            - updated_at
+      description: Student response with all fields
+
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Human-readable error message
+          example: "Validation error"
+        code:
+          type: string
+          description: Machine-readable error code
+          example: "VALIDATION_ERROR"
+        field:
+          type: string
+          description: Field that caused the error (if applicable)
+          example: "email"
+      required:
+        - detail
+        - code
+      description: Standard error response format per constitution
