@@ -1,5 +1,5 @@
 """Student CRUD API endpoints."""
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -149,7 +149,7 @@ def update_student(
     student.name = student_data.name
     student.email = student_data.email
     student.roll_number = student_data.roll_number
-    student.updated_at = datetime.utcnow()
+    student.updated_at = datetime.now(timezone.utc)
 
     session.add(student)
     session.commit()
@@ -217,7 +217,7 @@ def patch_student(
     for key, value in update_data.items():
         setattr(student, key, value)
 
-    student.updated_at = datetime.utcnow()
+    student.updated_at = datetime.now(timezone.utc)
 
     session.add(student)
     session.commit()
