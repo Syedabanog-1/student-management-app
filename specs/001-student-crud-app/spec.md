@@ -127,7 +127,7 @@ As an administrator, I want to delete student records so that I can remove stude
 
 - **FR-013**: System MUST persist all student data reliably across browser sessions and server restarts.
 
-- **FR-014**: System MUST implement a modern Glassmorphism UI design with glass-effect cards, blur backgrounds, and subtle gradients.
+- **FR-014**: System MUST implement a modern Glassmorphism UI design with glass-effect cards, blur backgrounds, gray color scheme background, and white text for readability.
 
 - **FR-015**: System MUST be responsive and functional on mobile devices (320px) through desktop screens (1920px+).
 
@@ -156,6 +156,13 @@ The following assumptions are made based on common patterns and will guide imple
 5. **Search Behavior**: Search is case-insensitive and matches partial strings (contains search, not exact match).
 
 6. **Pagination**: For MVP, infinite scroll or simple pagination with reasonable page sizes (20-50 items) is acceptable.
+
+## Clarifications
+
+### Session 2026-02-01
+
+- Q: What color scheme should the UI use? → A: Gray background with white text
+- Q: Should roll_number allow duplicates? → A: No, roll_number must be unique (already enforced via FR-003)
 
 ## Success Criteria *(mandatory)*
 

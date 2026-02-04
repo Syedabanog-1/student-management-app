@@ -1,3 +1,11 @@
+
+
+
+https://github.com/user-attachments/assets/ce7c6723-de62-4c04-ad67-2c9275316d59
+
+
+
+
 # Student Management Application
 
 A full-stack web application for managing student records with a modern Glassmorphism UI design.
