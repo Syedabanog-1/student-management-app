@@ -47,4 +47,15 @@ coverage/
 htmlcov/
 .pytest_cache/
 
+# TypeScript build info
+*.tsbuildinfo
+
+# Screenshots and images
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+Screenshot-*.jpg
+
 nul
