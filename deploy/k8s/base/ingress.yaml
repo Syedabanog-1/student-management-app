@@ -13,11 +13,12 @@ metadata:
 spec:
   tls:
     - hosts:
-        - student-app.example.com
-        - api.student-app.example.com
+        - newcom679.net
+        - www.newcom679.net
+        - api.newcom679.net
       secretName: student-app-tls
   rules:
-    - host: student-app.example.com
+    - host: newcom679.net
       http:
         paths:
           - path: /
@@ -27,7 +28,17 @@ spec:
                 name: frontend
                 port:
                   number: 3000
-    - host: api.student-app.example.com
+    - host: www.newcom679.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+    - host: api.newcom679.net
       http:
         paths:
           - path: /

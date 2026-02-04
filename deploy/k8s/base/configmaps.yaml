@@ -4,7 +4,7 @@ metadata:
   name: backend-config
   namespace: student-app
 data:
-  allowed-origins: "https://student-app.example.com,http://localhost:3000"
+  allowed-origins: "http://newcom679.net,https://newcom679.net,http://www.newcom679.net,https://www.newcom679.net,http://134.122.23.72,http://localhost:3000"
 ---
 apiVersion: v1
 kind: ConfigMap

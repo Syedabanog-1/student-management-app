@@ -42,7 +42,20 @@ async function fetchApi<T>(
   if (!response.ok) {
     let errorData: ApiError;
     try {
-      errorData = await response.json();
+      const jsonResponse = await response.json();
+      // FastAPI wraps HTTPException detail in a "detail" key
+      // Handle both nested format {"detail": {"detail": "...", "code": "..."}}
+      // and flat format {"detail": "...", "code": "..."}
+      if (jsonResponse.detail && typeof jsonResponse.detail === "object") {
+        errorData = jsonResponse.detail as ApiError;
+      } else if (jsonResponse.detail && typeof jsonResponse.detail === "string") {
+        errorData = {
+          detail: jsonResponse.detail,
+          code: "VALIDATION_ERROR",
+        };
+      } else {
+        errorData = jsonResponse as ApiError;
+      }
     } catch {
       errorData = {
         detail: "An unexpected error occurred",
